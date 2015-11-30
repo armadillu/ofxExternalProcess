@@ -18,18 +18,23 @@ public:
 
 	enum OUT_PIPE{
 		STDOUT_PIPE,
-		STDERR_PIPE
+		STDERR_PIPE,
+		STDOUT_AND_STDERR_PIPE
 	};
 
 	struct ScriptResult{
 		int statusCode;
 		string stdOutput;
 		string errOutput;
+		string combinedOutput;
+		ScriptResult(){
+			statusCode = -1;
+		}
 	};
 
 	ofxExternalProcess();
 
-	void setup(string scrptPath, vector<string> args);
+	void setup(string workingDir, string scriptCommand, vector<string> args);
 	void setSleepTimeAfterDone(int ms){ sleepMSAfterFinished = ms;} //sleep this # of ms after ext process ends
 	void setLivePipe(OUT_PIPE pipe);///when running threaded, you can get live stdOut/stdErr output
 									///from one of the pipes, but not both.
@@ -42,6 +47,8 @@ public:
 
 	string getStdOut();	///returns what the process has spitted out so far
 	string getStdErr();
+	string getCombinedOutput();
+	string getSmartOutput(); //returns the appropiate above method according to the LivePipe setting
 
 	//start the external process
 	void executeBlocking(); ///execute in current thread, blocks until script ends
@@ -69,11 +76,14 @@ protected:
 
 	int sleepMSAfterFinished;  //
 
-	string scriptPath;
-	vector<string> args;
+	string scriptWorkingDir;
+	string scriptCommand;
+
+	vector<string> commandArgs;
 
 	string stdOutput;
 	string errOutput;
+	string combinedOutput;
 
 
 	OUT_PIPE liveReadPipe;

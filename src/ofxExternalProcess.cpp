@@ -15,7 +15,6 @@
 ofxExternalProcess::ofxExternalProcess(){
 
 	state = IDLE;
-	scriptPath = ofToDataPath("scripts/script.sh");
 	liveReadPipe = STDOUT_PIPE;
 	isSetup = false;
 	pendingNotification = false;
@@ -23,29 +22,47 @@ ofxExternalProcess::ofxExternalProcess(){
 }
 
 
-void ofxExternalProcess::setup(string scrptPath, vector<string> args){
+void ofxExternalProcess::setup(string workingDir, string scriptCommand, vector<string> args){
 
+	scriptWorkingDir = workingDir;
+	this->scriptCommand = scriptCommand;
+	commandArgs = args;
+	isSetup = true;
+}
+
+void ofxExternalProcess::setLivePipe(OUT_PIPE pipe){
+	liveReadPipe = pipe;
 }
 
 void ofxExternalProcess::update(){
 
 	if(pendingNotification){
 		ofNotifyEvent(eventScriptEnded, result, this);
-		ofLogNotice("ofxExternalProcess") << "Notify Listeners that " << scriptPath << " is done";
+		ofLogNotice("ofxExternalProcess") << "Notify Listeners that " << scriptWorkingDir << "/" << scriptCommand << " is done";
 	}
 }
 
 
 void ofxExternalProcess::executeBlocking(){
+	if(!isSetup){
+		ofLogError("ofxExternalProcess") << "not setup! cant execute!";
+		return;
+	}
 	threadedFunction();
 }
 
 void ofxExternalProcess::executeInThreadAndNotify(){
+
+	if(!isSetup){
+		ofLogError("ofxExternalProcess") << "not setup! cant execute!";
+		return;
+	}
+
 	string localArgs;
-	for(string & arg : args){
+	for(string & arg : commandArgs){
 		localArgs += arg + " ";
 	}
-	ofLogNotice("ofxExternalProcess") << "Start Thread running external process " << scriptPath << " with args: [" << localArgs << "]";
+	ofLogNotice("ofxExternalProcess") << "Start Thread running external process " << scriptWorkingDir << "/" << scriptCommand << " with args: [" << localArgs << "]";
 	startThread();
 }
 
@@ -67,51 +84,88 @@ string ofxExternalProcess::getStdErr(){
 	return out;
 }
 
+string ofxExternalProcess::getCombinedOutput(){
+	string out;
+	lock();
+	out = combinedOutput;
+	unlock();
+	return out;
+}
+
+string ofxExternalProcess::getSmartOutput(){
+
+	switch (liveReadPipe) {
+		case STDOUT_PIPE: return getStdOut();
+		case STDERR_PIPE: return getStdErr();
+		case STDOUT_AND_STDERR_PIPE: return getCombinedOutput();
+	}
+	return "";
+}
+
 
 void ofxExternalProcess::threadedFunction(){
 
 	state = RUNNING;
 
-	//output = ofSystem(ofToDataPath("scripts/script.sh"));
-
-	std::string cmd(scriptPath);
-
-	std::vector<std::string> args;
-	//args.push_back("-ax");
-
 	Poco::Pipe outPipe;
 	Poco::Pipe errPipe;
+	Poco::Pipe combinedPipe;
 
-	Poco::ProcessHandle ph = Poco::Process::launch(cmd, args, 0, &outPipe, &errPipe);
+	Poco::Process::Args args = commandArgs;
 	Poco::PipeInputStream istrStd(outPipe);
 	Poco::PipeInputStream istrErr(errPipe);
+	Poco::PipeInputStream istrCombined(combinedPipe);
 
-	//read one pipe "live", without blocking, so that we can get live status
-	if(liveReadPipe == STDERR_PIPE){
-		readStreamWithProgress(istrErr, errOutput);
-	}else{
-		readStreamWithProgress(istrStd, stdOutput);
+	try{
+		Poco::ProcessHandle ph = Poco::Process::launch(
+													   "./" + scriptCommand, //TODO windows?
+													   args,
+													   scriptWorkingDir,
+ 													   0, //inPipe TODO!
+													   liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &outPipe,
+													   liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &errPipe
+													   );
+
+		//read one pipe "live", without blocking, so that we can get live status updates from the process
+		if(liveReadPipe == STDOUT_AND_STDERR_PIPE){
+			readStreamWithProgress(istrCombined, combinedOutput);
+		}else{
+			if(liveReadPipe == STDERR_PIPE){
+				readStreamWithProgress(istrErr, errOutput);
+			}else{
+				readStreamWithProgress(istrStd, stdOutput);
+			}
+		}
+
+		result.statusCode = ph.wait();
+
+	}catch(const Poco::Exception& exc){
+		ofLogFatalError("ofxExternalProcess::exception") << exc.displayText();
 	}
-
-	result.statusCode = ph.wait();
 
 	std::stringstream ss;
 
-	if(liveReadPipe == STDERR_PIPE){
-		Poco::StreamCopier::copyStream(istrStd, ss);
-		stdOutput = ss.str();
-	}else{
-		Poco::StreamCopier::copyStream(istrErr, ss);
-		errOutput = ss.str();
+	if(liveReadPipe != STDOUT_AND_STDERR_PIPE){ //if we didnt read both pipes at the same time,
+												//fully read the one that hasn't beed read yet
+		if(liveReadPipe == STDERR_PIPE){
+			Poco::StreamCopier::copyStream(istrStd, ss);
+			stdOutput = ss.str();
+		}else{
+			Poco::StreamCopier::copyStream(istrErr, ss);
+			errOutput = ss.str();
+		}
 	}
 
 	if(sleepMSAfterFinished > 0){
 		state = SLEEPING_AFTER_RUN;
 		ofSleepMillis(sleepMSAfterFinished); //hold the status output 5 secs on screen
 	}
+
 	pendingNotification = true;
 	result.stdOutput = stdOutput;
 	result.errOutput = errOutput;
+	result.combinedOutput = combinedOutput;
+
 	state = IDLE;
 }
 
