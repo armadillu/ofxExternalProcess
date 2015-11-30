@@ -1,13 +1,13 @@
 //
 //  ofxExternalProcess.h
-//  PG_WALL
+//  LP
 //
 //  Created by Oriol Ferrer Mesià on 26/11/15.
 //
 //
 
-#ifndef __PG_WALL__ofxExternalProcess__
-#define __PG_WALL__ofxExternalProcess__
+#ifndef __LP__ofxExternalProcess__
+#define __LP__ofxExternalProcess__
 
 #include "ofMain.h"
 #include "Poco/PipeStream.h"
@@ -83,4 +83,4 @@ protected:
 
 };
 
-#endif /* defined(__PG_WALL__ofxExternalProcess__) */
+#endif /* defined(__LP__ofxExternalProcess__) */

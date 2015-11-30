@@ -1,6 +1,6 @@
 //
 //  ofxExternalProcess.cpp
-//  PG_WALL
+//  LP
 //
 //  Created by Oriol Ferrer Mesià on 26/11/15.
 //
