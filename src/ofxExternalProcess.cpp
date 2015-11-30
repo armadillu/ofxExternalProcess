@@ -118,7 +118,7 @@ void ofxExternalProcess::threadedFunction(){
 
 	try{
 		Poco::ProcessHandle ph = Poco::Process::launch(
-													   "./" + scriptCommand, //TODO windows?
+													   scriptCommand,
 													   args,
 													   scriptWorkingDir,
  													   0, //inPipe TODO!
