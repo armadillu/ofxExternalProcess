@@ -5,7 +5,7 @@ void ofApp::setup(){
 
 	ofBackground(22);
 
-	//setup ls -la /////////////////////
+	// setup "ls -l -a -h" from "/" //////////////////////////////////////////////////
 	{
 
 		lsProc.setup(
@@ -16,19 +16,19 @@ void ofApp::setup(){
 		lsProc.setLivePipe(ofxExternalProcess::STDOUT_AND_STDERR_PIPE);
 	}
 
-	//setup ping 127.0.0.1 /////////////
+	// setup "ping -c 5 127.0.0.1" //////////////////////////////////////////////////
 	{
 
 		pingProc.setup(
 					 ".", 			//working dir
 					 "ping", 		//command
-					 {"-c", "10", "127.0.0.1"} 	//args (std::vector<string>)
+					 {"-c", "5", "127.0.0.1"} 	//args (std::vector<string>)
 					 );
 		pingProc.setLivePipe(ofxExternalProcess::STDOUT_AND_STDERR_PIPE);
 
 	}
 
-	//Launch Both
+	// Launch Both processess ////////////////////////////////////////////////////////
 
 	lsProc.executeInThreadAndNotify();
 	pingProc.executeInThreadAndNotify();

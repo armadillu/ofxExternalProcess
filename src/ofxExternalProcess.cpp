@@ -63,6 +63,7 @@ void ofxExternalProcess::executeInThreadAndNotify(){
 		localArgs += arg + " ";
 	}
 	ofLogNotice("ofxExternalProcess") << "Start Thread running external process " << scriptWorkingDir << "/" << scriptCommand << " with args: [" << localArgs << "]";
+	state = RUNNING;
 	startThread();
 }
 
