@@ -40,6 +40,9 @@ public:
 									///from one of the pipes, but not both.
 									///you get to choose which one here
 
+	void setLivePipeOutputDelay(int ms){outputPipeReadDelay = ms;} ///use this to slow down stdout stderr
+	//void setLivePipeBufferReadSize(int s){readBufferSize = s;}
+
 	void update(); //must call this if you care about getting notified when ext process ends
 
 	bool isRunning(){return state != IDLE;}
@@ -75,6 +78,8 @@ protected:
 	bool isSetup;
 
 	int sleepMSAfterFinished;  //
+	int outputPipeReadDelay; //ms
+	//int readBufferSize;
 
 	string scriptWorkingDir;
 	string scriptCommand;
@@ -84,7 +89,6 @@ protected:
 	string stdOutput;
 	string errOutput;
 	string combinedOutput;
-
 
 	OUT_PIPE liveReadPipe;
 

@@ -18,7 +18,8 @@ ofxExternalProcess::ofxExternalProcess(){
 	liveReadPipe = STDOUT_PIPE;
 	isSetup = false;
 	pendingNotification = false;
-	sleepMSAfterFinished = 0;
+	sleepMSAfterFinished = outputPipeReadDelay = 0;
+	//readBufferSize = 5;
 }
 
 
@@ -192,5 +193,6 @@ void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input,
 		lock();
 		output = ss.str();
 		unlock();
+		if(outputPipeReadDelay > 0 && sz%10 == 0) ofSleepMillis(outputPipeReadDelay);
 	}
 }
