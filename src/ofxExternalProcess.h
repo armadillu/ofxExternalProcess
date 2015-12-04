@@ -27,8 +27,10 @@ public:
 		string stdOutput;
 		string errOutput;
 		string combinedOutput;
+		float runTime;
 		ScriptResult(){
 			statusCode = -1;
+			runTime = 0.0f;
 		}
 	};
 
@@ -65,6 +67,11 @@ public:
 									///you must call update() every frame for the notification to work.
 
 	ofEvent<ScriptResult> eventScriptEnded; //will get triggered when the script is done.
+
+	///get the result of the process execution. includes stdout / err, and exit status code.
+	///if you call this ahead of time (ie when no process has been run, or while its still running
+	///you will get garbage.
+	ofxExternalProcess::ScriptResult getLastExecutionResult(){return result;}
 
 protected:
 

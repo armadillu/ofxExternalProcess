@@ -119,6 +119,7 @@ void ofxExternalProcess::threadedFunction(){
 	Poco::PipeInputStream istrCombined(combinedPipe);
 
 	try{
+		float t = ofGetElapsedTimef();
 		Poco::ProcessHandle ph = Poco::Process::launch(
 													   scriptCommand,
 													   args,
@@ -140,6 +141,7 @@ void ofxExternalProcess::threadedFunction(){
 		}
 
 		result.statusCode = ph.wait();
+		result.runTime = ofGetElapsedTimef() - t;
 
 	}catch(const Poco::Exception& exc){
 		ofLogFatalError("ofxExternalProcess::exception") << exc.displayText();
