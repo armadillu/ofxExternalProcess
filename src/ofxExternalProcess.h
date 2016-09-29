@@ -10,6 +10,7 @@
 #define __LP__ofxExternalProcess__
 
 #include "ofMain.h"
+#include "Poco/Process.h"
 #include "Poco/PipeStream.h"
 
 class ofxExternalProcess : public ofThread {
@@ -66,6 +67,8 @@ public:
 	void executeInThreadAndNotify(); ///spawns a new thread, executes, and notifies. you must addListener for "eventScriptEnded" event to get notified
 									///you must call update() every frame for the notification to work.
 
+	void kill();
+
 	ofEvent<ScriptResult> eventScriptEnded; //will get triggered when the script is done.
 
 	///get the result of the process execution. includes stdout / err, and exit status code.
@@ -109,6 +112,7 @@ protected:
 	void readStreamWithProgress(Poco::PipeInputStream & input,
 								string & output);
 
+	Poco::ProcessHandle * phPtr = nullptr;
 };
 
 #endif /* defined(__LP__ofxExternalProcess__) */

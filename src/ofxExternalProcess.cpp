@@ -8,7 +8,6 @@
 
 #include "ofxExternalProcess.h"
 
-#include "Poco/Process.h"
 #include "Poco/StreamCopier.h"
 #include "Poco/Buffer.h"
 
@@ -121,13 +120,14 @@ void ofxExternalProcess::threadedFunction(){
 	try{
 		float t = ofGetElapsedTimef();
 		Poco::ProcessHandle ph = Poco::Process::launch(
-													   scriptCommand,
-													   args,
-													   scriptWorkingDir,
- 													   0, //inPipe TODO!
-													   liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &outPipe,
-													   liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &errPipe
-													   );
+													scriptCommand,
+													args,
+													scriptWorkingDir,
+ 													0, //inPipe TODO!
+													liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &outPipe,
+													liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &errPipe
+													);
+		phPtr = &ph;
 
 		//read one pipe "live", without blocking, so that we can get live status updates from the process
 		if(liveReadPipe == STDOUT_AND_STDERR_PIPE){
@@ -141,10 +141,12 @@ void ofxExternalProcess::threadedFunction(){
 		}
 
 		result.statusCode = ph.wait();
+		phPtr = nullptr;
 		result.runTime = ofGetElapsedTimef() - t;
 
 	}catch(const Poco::Exception& exc){
 		ofLogFatalError("ofxExternalProcess::exception") << exc.displayText();
+		phPtr = nullptr;
 	}
 
 	std::stringstream ss;
@@ -173,6 +175,18 @@ void ofxExternalProcess::threadedFunction(){
 	state = IDLE;
 }
 
+
+void ofxExternalProcess::kill(){
+	if (phPtr != nullptr) {
+		ofLogWarning("ofxExternalProcess") << "Trying to kill process!";
+		try {
+			Poco::Process::kill(*phPtr);
+		} catch (exception e) {
+			ofLogError("ofxExternalProcess") << e.what();
+		}
+		ofLogWarning("ofxExternalProcess") << "Done killing process!";
+	}
+}
 
 void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input,
 														 string & output){
