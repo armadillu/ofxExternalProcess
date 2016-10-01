@@ -23,13 +23,15 @@ public:
 		STDOUT_AND_STDERR_PIPE
 	};
 
-	struct ScriptResult{
+	struct Result{
+		ofxExternalProcess * who;
+		string commandFullPath;
 		int statusCode;
 		string stdOutput;
 		string errOutput;
 		string combinedOutput;
 		float runTime;
-		ScriptResult(){
+		Result(){
 			statusCode = -1;
 			runTime = 0.0f;
 		}
@@ -64,17 +66,17 @@ public:
 
 	//start the external process
 	void executeBlocking(); ///execute in current thread, blocks until script ends
-	void executeInThreadAndNotify(); ///spawns a new thread, executes, and notifies. you must addListener for "eventScriptEnded" event to get notified
+	void executeInThreadAndNotify(); ///spawns a new thread, executes, and notifies. you must addListener for "eventProcessEnded" event to get notified
 									///you must call update() every frame for the notification to work.
 
 	void kill();
 
-	ofEvent<ScriptResult> eventScriptEnded; //will get triggered when the script is done.
+	ofEvent<Result> eventProcessEnded; //will get triggered when the script is done.
 
 	///get the result of the process execution. includes stdout / err, and exit status code.
 	///if you call this ahead of time (ie when no process has been run, or while its still running
 	///you will get garbage.
-	ofxExternalProcess::ScriptResult getLastExecutionResult(){return result;}
+	ofxExternalProcess::Result getLastExecutionResult(){return result;}
 
 protected:
 
@@ -88,7 +90,7 @@ protected:
 	void threadedFunction();
 
 	bool pendingNotification;
-	ScriptResult result;
+	Result result;
 
 	State state;
 	bool isSetup;

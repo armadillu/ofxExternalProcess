@@ -19,15 +19,17 @@ ofxExternalProcess::ofxExternalProcess(){
 	pendingNotification = false;
 	sleepMSAfterFinished = outputPipeReadDelay = 0;
 	//readBufferSize = 5;
+	result.who = this;
 }
 
 
 void ofxExternalProcess::setup(string workingDir, string scriptCommand, vector<string> args){
-
 	scriptWorkingDir = workingDir;
 	this->scriptCommand = scriptCommand;
+	result.commandFullPath = scriptCommand;
 	commandArgs = args;
 	isSetup = true;
+	result.who = this;
 }
 
 void ofxExternalProcess::setLivePipe(OUT_PIPE pipe){
@@ -37,8 +39,9 @@ void ofxExternalProcess::setLivePipe(OUT_PIPE pipe){
 void ofxExternalProcess::update(){
 
 	if(pendingNotification){
-		ofNotifyEvent(eventScriptEnded, result, this);
-		ofLogNotice("ofxExternalProcess") << "Notify Listeners that " << scriptWorkingDir << "/" << scriptCommand << " is done";
+		ofNotifyEvent(eventProcessEnded, result, this);
+		ofLogNotice("ofxExternalProcess") << "Notify Listeners that '" << scriptCommand << "' at '" << scriptWorkingDir << "' is done";
+		pendingNotification = false;
 	}
 }
 
@@ -62,7 +65,7 @@ void ofxExternalProcess::executeInThreadAndNotify(){
 	for(string & arg : commandArgs){
 		localArgs += arg + " ";
 	}
-	ofLogNotice("ofxExternalProcess") << "Start Thread running external process " << scriptWorkingDir << "/" << scriptCommand << " with args: [" << localArgs << "]";
+	ofLogNotice("ofxExternalProcess") << "Start Thread running external process '" << scriptCommand << "' in working dir '"  << scriptWorkingDir << " with args: [" << localArgs << "]";
 	state = RUNNING;
 	startThread();
 }
@@ -143,7 +146,7 @@ void ofxExternalProcess::threadedFunction(){
 		result.statusCode = ph.wait();
 		phPtr = nullptr;
 		result.runTime = ofGetElapsedTimef() - t;
-
+		
 	}catch(const Poco::Exception& exc){
 		ofLogFatalError("ofxExternalProcess::exception") << exc.displayText();
 		phPtr = nullptr;
@@ -164,7 +167,7 @@ void ofxExternalProcess::threadedFunction(){
 
 	if(sleepMSAfterFinished > 0){
 		state = SLEEPING_AFTER_RUN;
-		ofSleepMillis(sleepMSAfterFinished); //hold the status output 5 secs on screen
+		sleep(sleepMSAfterFinished); //hold the status output 5 secs on screen
 	}
 
 	pendingNotification = true;
