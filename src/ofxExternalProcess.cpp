@@ -65,7 +65,7 @@ void ofxExternalProcess::executeInThreadAndNotify(){
 	for(string & arg : commandArgs){
 		localArgs += arg + " ";
 	}
-	ofLogNotice("ofxExternalProcess") << "Start Thread running external process '" << scriptCommand << "' in working dir '"  << scriptWorkingDir << " with args: [" << localArgs << "]";
+	ofLogNotice("ofxExternalProcess") << "Start Thread running external process '" << scriptCommand << "' in working dir '"  << scriptWorkingDir << "' with args: [" << localArgs << "]";
 	state = RUNNING;
 	startThread();
 }
@@ -143,7 +143,12 @@ void ofxExternalProcess::threadedFunction(){
 			}
 		}
 
-		result.statusCode = ph.wait();
+		try {
+			result.statusCode = ph.wait();
+		} catch (exception e) {
+			ofLogError("ofxExternalProcess") << "exception while process '" << scriptCommand << "' is executing";
+			ofLogError("ofxExternalProcess") << e.what();
+		}
 		phPtr = nullptr;
 		result.runTime = ofGetElapsedTimef() - t;
 		
