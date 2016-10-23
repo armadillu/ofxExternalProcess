@@ -95,10 +95,9 @@ protected:
 	State state;
 	bool isSetup;
 
-	int sleepMSAfterFinished;  //
-	int outputPipeReadDelay; //ms - used to slow down the reading from pipe in case you want to draw
+	int sleepMSAfterFinished = 0;  //
+	int outputPipeReadDelay = 0; //ms - used to slow down the reading from pipe in case you want to draw
 								//the output on screen - this way you can get a more naturall scrolling.
-	//int readBufferSize;
 
 	string scriptWorkingDir;
 	string scriptCommand;

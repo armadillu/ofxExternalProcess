@@ -17,8 +17,6 @@ ofxExternalProcess::ofxExternalProcess(){
 	liveReadPipe = STDOUT_PIPE;
 	isSetup = false;
 	pendingNotification = false;
-	sleepMSAfterFinished = outputPipeReadDelay = 0;
-	//readBufferSize = 5;
 	result.who = this;
 }
 
@@ -196,8 +194,7 @@ void ofxExternalProcess::kill(){
 	}
 }
 
-void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input,
-														 string & output){
+void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, string & output){
 
 	std::stringstream ss;
 	int bufferSize = 1;
