@@ -124,20 +124,22 @@ void ofxExternalProcess::threadedFunction(){
 													scriptCommand,
 													args,
 													scriptWorkingDir,
- 													0, //inPipe TODO!
+ 													nullptr, //inPipe TODO!
 													liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &outPipe,
 													liveReadPipe == STDOUT_AND_STDERR_PIPE ? &combinedPipe : &errPipe
 													);
 		phPtr = &ph;
 
-		//read one pipe "live", without blocking, so that we can get live status updates from the process
-		if(liveReadPipe == STDOUT_AND_STDERR_PIPE){
-			readStreamWithProgress(istrCombined, combinedOutput);
-		}else{
-			if(liveReadPipe == STDERR_PIPE){
-				readStreamWithProgress(istrErr, errOutput);
+		if(liveReadPipe != IGNORE_OUTPUT){
+			//read one pipe "live", without blocking, so that we can get live status updates from the process
+			if(liveReadPipe == STDOUT_AND_STDERR_PIPE){
+				readStreamWithProgress(istrCombined, combinedOutput);
 			}else{
-				readStreamWithProgress(istrStd, stdOutput);
+				if(liveReadPipe == STDERR_PIPE){
+					readStreamWithProgress(istrErr, errOutput);
+				}else{
+					readStreamWithProgress(istrStd, stdOutput);
+				}
 			}
 		}
 
@@ -157,14 +159,21 @@ void ofxExternalProcess::threadedFunction(){
 
 	std::stringstream ss;
 
-	if(liveReadPipe != STDOUT_AND_STDERR_PIPE){ //if we didnt read both pipes at the same time,
-												//fully read the one that hasn't beed read yet
-		if(liveReadPipe == STDERR_PIPE){
-			Poco::StreamCopier::copyStream(istrStd, ss);
-			stdOutput = ss.str();
-		}else{
-			Poco::StreamCopier::copyStream(istrErr, ss);
-			errOutput = ss.str();
+	if(liveReadPipe != IGNORE_OUTPUT){
+		try{
+			if(liveReadPipe != STDOUT_AND_STDERR_PIPE){ //if we didnt read both pipes at the same time,
+														//fully read the one that hasn't beed read yet
+				if(liveReadPipe == STDERR_PIPE){
+					Poco::StreamCopier::copyStream(istrStd, ss);
+					stdOutput = ss.str();
+				}else{
+					Poco::StreamCopier::copyStream(istrErr, ss);
+					errOutput = ss.str();
+				}
+			}
+		}catch(const Poco::Exception& exc){
+			ofLogFatalError("ofxExternalProcess::exception") << exc.displayText();
+			phPtr = nullptr;
 		}
 	}
 

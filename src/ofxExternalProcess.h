@@ -20,7 +20,8 @@ public:
 	enum OUT_PIPE{
 		STDOUT_PIPE,
 		STDERR_PIPE,
-		STDOUT_AND_STDERR_PIPE
+		STDOUT_AND_STDERR_PIPE,
+		IGNORE_OUTPUT
 	};
 
 	struct Result{
@@ -97,7 +98,7 @@ protected:
 
 	int sleepMSAfterFinished = 0;  //
 	int outputPipeReadDelay = 0; //ms - used to slow down the reading from pipe in case you want to draw
-								//the output on screen - this way you can get a more naturall scrolling.
+								//the output on screen - this way you can get a more natural scrolling.
 
 	string scriptWorkingDir;
 	string scriptCommand;
