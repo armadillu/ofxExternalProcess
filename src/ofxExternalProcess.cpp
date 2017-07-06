@@ -195,7 +195,11 @@ void ofxExternalProcess::kill(){
 	if (phPtr != nullptr) {
 		ofLogWarning("ofxExternalProcess") << "Trying to kill process!";
 		try {
+			#ifdef TARGET_WIN32
 			Poco::Process::kill(*phPtr);
+			#else
+			Poco::Process::requestTermination(phPtr->id()); //slightly nicer kill on unix based
+			#endif
 		} catch (exception e) {
 			ofLogError("ofxExternalProcess") << e.what();
 		}
