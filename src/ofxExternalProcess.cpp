@@ -11,6 +11,8 @@
 #include "Poco/StreamCopier.h"
 #include "Poco/Buffer.h"
 
+using namespace std;
+
 ofxExternalProcess::ofxExternalProcess(){
 
 	state = IDLE;

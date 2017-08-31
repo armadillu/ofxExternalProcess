@@ -26,11 +26,11 @@ public:
 
 	struct Result{
 		ofxExternalProcess * who;
-		string commandFullPath;
+		std::string commandFullPath;
 		int statusCode;
-		string stdOutput;
-		string errOutput;
-		string combinedOutput;
+		std::string stdOutput;
+		std::string errOutput;
+		std::string combinedOutput;
 		float runTime;
 		Result(){
 			statusCode = -1;
@@ -40,7 +40,7 @@ public:
 
 	ofxExternalProcess();
 
-	void setup(string workingDir, string scriptCommand, vector<string> args);
+	void setup(std::string workingDir, std::string scriptCommand, std::vector<std::string> args);
 	void setSleepTimeAfterDone(int ms){ sleepMSAfterFinished = ms;} //sleep this # of ms after ext process ends
 	void setLivePipe(OUT_PIPE pipe);///when running threaded, you can get live stdOut/stdErr output
 									///from one of the pipes, or from both at the same time (but mixed, so you dony know whats out and whats err)
@@ -60,10 +60,10 @@ public:
 	//you can call the apropiate method as the process is running to get "live" output on that pipe;
 	//but if you call a method that doesnt match your setting for setLivePipe() you will get an empty string
 	//until the process is fully finished; at that time, you will get the full output for any pipe.
-	string getStdOut();	///returns what the process has spitted out so far
-	string getStdErr();
-	string getCombinedOutput(); //returns what the process has spitted on both stdout and stderr
-	string getSmartOutput(); //returns the appropiate above method according to the chose setLivePipe() setting
+	std::string getStdOut();	///returns what the process has spitted out so far
+	std::string getStdErr();
+	std::string getCombinedOutput(); //returns what the process has spitted on both stdout and stderr
+	std::string getSmartOutput(); //returns the appropiate above method according to the chose setLivePipe() setting
 
 	//start the external process
 	void executeBlocking(); ///execute in current thread, blocks until script ends
@@ -100,19 +100,19 @@ protected:
 	int outputPipeReadDelay = 0; //ms - used to slow down the reading from pipe in case you want to draw
 								//the output on screen - this way you can get a more natural scrolling.
 
-	string scriptWorkingDir;
-	string scriptCommand;
+	std::string scriptWorkingDir;
+	std::string scriptCommand;
 
-	vector<string> commandArgs;
+	std::vector<std::string> commandArgs;
 
-	string stdOutput;
-	string errOutput;
-	string combinedOutput;
+	std::string stdOutput;
+	std::string errOutput;
+	std::string combinedOutput;
 
 	OUT_PIPE liveReadPipe;
 
 	void readStreamWithProgress(Poco::PipeInputStream & input,
-								string & output);
+								std::string & output);
 
 	Poco::ProcessHandle * phPtr = nullptr;
 };
