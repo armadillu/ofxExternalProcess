@@ -22,6 +22,9 @@ ofxExternalProcess::ofxExternalProcess(){
 	result.who = this;
 }
 
+ofxExternalProcess::~ofxExternalProcess(){
+
+}
 
 void ofxExternalProcess::setup(string workingDir, string scriptCommand, vector<string> args){
 	scriptWorkingDir = workingDir;
@@ -48,7 +51,7 @@ void ofxExternalProcess::update(){
 
 void ofxExternalProcess::executeBlocking(){
 	if(!isSetup){
-		ofLogError("ofxExternalProcess") << "not setup! cant execute!";
+		ofLogError("ofxExternalProcess") << "not setup! cant executeBlocking()!";
 		return;
 	}
 	threadedFunction();
@@ -57,42 +60,46 @@ void ofxExternalProcess::executeBlocking(){
 void ofxExternalProcess::executeInThreadAndNotify(){
 
 	if(!isSetup){
-		ofLogError("ofxExternalProcess") << "not setup! cant execute!";
+		ofLogError("ofxExternalProcess") << "not setup! cant executeInThreadAndNotify()!";
 		return;
 	}
 
-	string localArgs;
-	for(string & arg : commandArgs){
-		localArgs += arg + " ";
+	if(state == IDLE){
+		string localArgs;
+		for(string & arg : commandArgs){
+			localArgs += arg + " ";
+		}
+		ofLogNotice("ofxExternalProcess") << "start Thread running external process '" << scriptCommand << "' in working dir '"  << scriptWorkingDir << "' with args: [" << localArgs << "]";
+		state = RUNNING;
+		future = std::async(std::launch::async, &ofxExternalProcess::threadedFunction, this);
+	}else{
+		ofLogError("ofxExternalProcess") << "can't executeInThreadAndNotify() bc we are already running!";
 	}
-	ofLogNotice("ofxExternalProcess") << "Start Thread running external process '" << scriptCommand << "' in working dir '"  << scriptWorkingDir << "' with args: [" << localArgs << "]";
-	state = RUNNING;
-	startThread();
 }
 
 
 string ofxExternalProcess::getStdOut(){
 	string out;
-	lock();
+	mutex.lock();
 	out = stdOutput;
-	unlock();
+	mutex.unlock();
 	return out;
 }
 
 
 string ofxExternalProcess::getStdErr(){
 	string out;
-	lock();
+	mutex.lock();
 	out = errOutput;
-	unlock();
+	mutex.unlock();
 	return out;
 }
 
 string ofxExternalProcess::getCombinedOutput(){
 	string out;
-	lock();
+	mutex.lock();
 	out = combinedOutput;
-	unlock();
+	mutex.unlock();
 	return out;
 }
 
@@ -146,8 +153,8 @@ void ofxExternalProcess::threadedFunction(){
 		}
 
 		try {
-			result.statusCode = ph.wait();
-		} catch (exception e) {
+			result.statusCode = ph.wait(); //this blocks for as long as the ext process is running
+		}catch(exception e){
 			ofLogError("ofxExternalProcess") << "exception while process '" << scriptCommand << "' is executing";
 			ofLogError("ofxExternalProcess") << e.what();
 		}
@@ -193,6 +200,22 @@ void ofxExternalProcess::threadedFunction(){
 }
 
 
+void ofxExternalProcess::join(long milliseconds){
+
+	if(state == RUNNING || state == SLEEPING_AFTER_RUN){
+		ofLogNotice("ofxExternalProcess") << "Waiting for process thread to die...";
+		if(milliseconds >= 0){
+			std::future_status status = future.wait_for(std::chrono::milliseconds(milliseconds));
+		}else{
+			future.wait();
+		}
+		ofLogNotice("ofxExternalProcess") << "Done waiting!";
+	}else{
+		ofLogWarning("ofxExternalProcess") << "Can't join() bc no thread is running";
+	}
+}
+
+
 void ofxExternalProcess::kill(){
 	if (phPtr != nullptr) {
 		ofLogWarning("ofxExternalProcess") << "Trying to kill process!";
@@ -224,11 +247,12 @@ void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, s
 		if (input && ss){
 			input.read(buffer.begin(), bufferSize);
 			n = input.gcount();
+		}else{
+			n = 0;
 		}
-		else n = 0;
-		lock();
+		mutex.lock();
 		output = ss.str();
-		unlock();
+		mutex.unlock();
 		if(outputPipeReadDelay > 0 && sz%10 == 0) ofSleepMillis(outputPipeReadDelay);
 	}
 }

@@ -12,8 +12,9 @@
 #include "ofMain.h"
 #include "Poco/Process.h"
 #include "Poco/PipeStream.h"
+#include <future>
 
-class ofxExternalProcess : public ofThread {
+class ofxExternalProcess{
 
 public:
 
@@ -39,6 +40,7 @@ public:
 	};
 
 	ofxExternalProcess();
+	~ofxExternalProcess();
 
 	void setup(std::string workingDir, std::string scriptCommand, std::vector<std::string> args);
 	void setSleepTimeAfterDone(int ms){ sleepMSAfterFinished = ms;} //sleep this # of ms after ext process ends
@@ -71,6 +73,9 @@ public:
 									///you must call update() every frame for the notification to work.
 
 	void kill();
+	void join(long milliseconds = -1); 	//if u spawned the process with executeInThreadAndNotify(),
+										//mostly makes sense for destructors that want to destroy a ofxExternalProcess that is running
+										//-1 waits forever
 
 	ofEvent<Result> eventProcessEnded; //will get triggered when the script is done.
 
@@ -87,7 +92,8 @@ protected:
 		SLEEPING_AFTER_RUN
 	};
 
-	void startThread(){ofThread::startThread();}; //only start threads from our API
+	std::mutex mutex;
+
 	void threadedFunction();
 
 	bool pendingNotification;
@@ -115,6 +121,8 @@ protected:
 								std::string & output);
 
 	Poco::ProcessHandle * phPtr = nullptr;
+
+	std::future<void> future;
 };
 
 #endif /* defined(__LP__ofxExternalProcess__) */
