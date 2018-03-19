@@ -23,7 +23,9 @@ ofxExternalProcess::ofxExternalProcess(){
 }
 
 ofxExternalProcess::~ofxExternalProcess(){
-
+	if(state != IDLE){
+		join();
+	}
 }
 
 void ofxExternalProcess::setup(string workingDir, string scriptCommand, vector<string> args){
