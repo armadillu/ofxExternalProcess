@@ -47,6 +47,8 @@ public:
 	void setLivePipe(OUT_PIPE pipe);///when running threaded, you can get live stdOut/stdErr output
 									///from one of the pipes, or from both at the same time (but mixed, so you dony know whats out and whats err)
 
+	void setIoBufferSize(size_t bufferSize);
+
 	///use this to slow down stdout stderr pipe reading
 	///use it if you want a more progressive output from getSmartOutput()
 	///in case you are drawing to screen.
@@ -114,6 +116,8 @@ protected:
 	std::string stdOutput;
 	std::string errOutput;
 	std::string combinedOutput;
+
+	size_t ioReadBufferSize = 1024;
 
 	OUT_PIPE liveReadPipe;
 

@@ -41,6 +41,11 @@ void ofxExternalProcess::setLivePipe(OUT_PIPE pipe){
 	liveReadPipe = pipe;
 }
 
+
+void ofxExternalProcess::setIoBufferSize(size_t bufferSize){
+	ioReadBufferSize = std::max(bufferSize, (size_t) 1);
+}
+
 void ofxExternalProcess::update(){
 
 	if(pendingNotification){
@@ -237,7 +242,7 @@ void ofxExternalProcess::kill(){
 void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, string & output){
 
 	std::stringstream ss;
-	int bufferSize = 1;
+	int bufferSize = ioReadBufferSize;
 	Poco::Buffer<char> buffer(bufferSize);
 	std::streamsize sz = 0;
 	input.read(buffer.begin(), bufferSize);
