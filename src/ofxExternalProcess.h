@@ -117,7 +117,7 @@ protected:
 	std::string errOutput;
 	std::string combinedOutput;
 
-	size_t ioReadBufferSize = 1024;
+	size_t ioReadBufferSize = 32;
 
 	OUT_PIPE liveReadPipe;
 

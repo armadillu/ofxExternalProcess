@@ -125,6 +125,13 @@ void ofxExternalProcess::threadedFunction(){
 
 	state = RUNNING;
 
+	#ifdef TARGET_WIN32
+	#elif defined(TARGET_LINUX)
+	pthread_setname_np(pthread_self(), "ofxExternalProcess");
+	#else
+	pthread_setname_np("ofxExternalProcess");
+	#endif
+
 	Poco::Pipe outPipe;
 	Poco::Pipe errPipe;
 	Poco::Pipe combinedPipe;
@@ -242,12 +249,13 @@ void ofxExternalProcess::kill(){
 void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, string & output){
 
 	std::stringstream ss;
-	int bufferSize = ioReadBufferSize;
+	int bufferSize = 1; ///ioReadBufferSize;
 	Poco::Buffer<char> buffer(bufferSize);
 	std::streamsize sz = 0;
 	input.read(buffer.begin(), bufferSize);
 	std::streamsize n = input.gcount();
 
+	size_t count = 0;
 	while (n > 0){
 		sz += n;
 		ss.write(buffer.begin(), n);
@@ -257,9 +265,12 @@ void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, s
 		}else{
 			n = 0;
 		}
-		mutex.lock();
-		output = ss.str();
-		mutex.unlock();
-		if(outputPipeReadDelay > 0 && sz%10 == 0) ofSleepMillis(outputPipeReadDelay);
+		if(count % ioReadBufferSize == 0){
+			mutex.lock();
+			output = ss.str();
+			mutex.unlock();
+		}
+		if(outputPipeReadDelay > 0) ofSleepMillis(outputPipeReadDelay);
+		count++;
 	}
 }
