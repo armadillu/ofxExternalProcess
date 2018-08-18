@@ -116,6 +116,7 @@ string ofxExternalProcess::getSmartOutput(){
 		case STDOUT_PIPE: return getStdOut();
 		case STDERR_PIPE: return getStdErr();
 		case STDOUT_AND_STDERR_PIPE: return getCombinedOutput();
+		default: break;
 	}
 	return "";
 }
