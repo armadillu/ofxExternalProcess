@@ -250,7 +250,7 @@ void ofxExternalProcess::kill(){
 void ofxExternalProcess::readStreamWithProgress(Poco::PipeInputStream & input, string & output){
 
 	std::stringstream ss;
-	int bufferSize = 64; ///ioReadBufferSize;
+	int bufferSize = 8; ///ioReadBufferSize;
 	Poco::Buffer<char> buffer(bufferSize);
 	std::streamsize sz = 0;
 	input.read(buffer.begin(), bufferSize);
